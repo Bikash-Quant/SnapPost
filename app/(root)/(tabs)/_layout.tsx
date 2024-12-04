@@ -1,28 +1,53 @@
-import { icons } from "@/constants";
 import { Tabs } from "expo-router";
-import { View } from "react-native";
-import { Image } from "react-native";
+import { Image, ImageSourcePropType, View } from "react-native";
 
-type TabIconProps = {
+import { icons } from "@/constants";
+
+const TabIcon = ({
+  source,
+  focused,
+}: {
+  source: ImageSourcePropType;
   focused: boolean;
-  source: any;
-};
-const TabIcon: React.FC<TabIconProps> = () => {
-  return (
-    <View>
-      <View>
-        <Image></Image>
-      </View>
+}) => (
+  <View
+    className={`flex flex-row justify-center items-center rounded-full ${focused ? "bg-general-300" : ""}`}
+  >
+    <View
+      className={`rounded-full w-12 h-12 ml-3 items-center justify-center ${focused ? "bg-general-400" : ""}`}
+    >
+      <Image
+        source={source}
+        tintColor="white"
+        resizeMode="cover"
+        className="w-7 h-7"
+      />
     </View>
-  );
-};
+  </View>
+);
 
-const Layout = () => {
+export default function Layout() {
   return (
     <Tabs
-      initialRouteName="index"
+      initialRouteName="home"
       screenOptions={{
-        tabBarActiveTintColor: "white",
+        // tabBarActiveTintColor: "white",
+        tabBarInactiveTintColor: "white",
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: "#333",
+          borderRadius: 50,
+          //   paddingBottom: 0, // ios only
+          overflow: "hidden",
+          marginHorizontal: 20,
+          marginBottom: 20,
+          height: 70,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexDirection: "row",
+          position: "absolute",
+        },
       }}
     >
       <Tabs.Screen
@@ -31,7 +56,7 @@ const Layout = () => {
           title: "Home",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} source={icons.home} />
+            <TabIcon source={icons.home} focused={focused} />
           ),
         }}
       />
@@ -41,7 +66,7 @@ const Layout = () => {
           title: "Rides",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} source={icons.list} />
+            <TabIcon source={icons.list} focused={focused} />
           ),
         }}
       />
@@ -51,7 +76,7 @@ const Layout = () => {
           title: "Chat",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} source={icons.chat} />
+            <TabIcon source={icons.chat} focused={focused} />
           ),
         }}
       />
@@ -61,12 +86,10 @@ const Layout = () => {
           title: "Profile",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} source={icons.profile} />
+            <TabIcon source={icons.profile} focused={focused} />
           ),
         }}
       />
     </Tabs>
   );
-};
-
-export default Layout;
+}
