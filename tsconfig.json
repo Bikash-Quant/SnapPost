@@ -9,9 +9,11 @@
   },
   "include": [
     "**/*.ts",
+    "**/*.js",
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "app/(root)/(tabs)/chatbotScript.js"
   ]
 }
