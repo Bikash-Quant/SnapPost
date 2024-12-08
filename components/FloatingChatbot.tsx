@@ -9,10 +9,17 @@ import {
   Animated,
   StyleSheet,
   ActivityIndicator,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import Avatar from "./Avatar";
 import closeIcon from "@/assets/icons/close.png";
-import LinearGradient from "react-native-linear-gradient";
+import attachIcon from "@/assets/icons/attachment.png";
+import sendIcon from "@/assets/icons/send.png";
+import TypingText from "@/components/TypingText";
+
+// import LinearGradient from "react-native-linear-gradient";
 
 // Configuration Type Definition
 interface ChatbotConfig {
@@ -59,9 +66,26 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
       sender: "user" | "bot";
       typing?: boolean;
     }[]
-  >([]);
+  >([
+    {
+      text: "Hi! Welcome to Telco. I'm Quant. How can I help you today?",
+      sender: "bot",
+      typing: false,
+    },
+    {
+      text: "what can you do for me",
+      sender: "user",
+      typing: false,
+    },
+    {
+      text: "Thinking ...",
+      sender: "bot",
+      typing: true,
+    },
+  ]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   // Draggable Icon Position
   const pan = useRef(new Animated.ValueXY()).current;
@@ -135,9 +159,9 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
             },
           ]}
         >
-          <ActivityIndicator
-            size="small"
-            color={mergedConfig.theme.primaryColor}
+          <TypingText
+            msg={message.text}
+            // color={mergedConfig.theme.primaryColor}
           />
         </View>
       );
@@ -200,19 +224,17 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
       flex: 1,
       padding: 10,
     },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
     inputContainer: {
-      flexDirection: "row",
+      flexDirection: "column",
       padding: 10,
-      borderTopWidth: 1,
-      borderTopColor: "#e0e0e0",
     },
     input: {
       flex: 1,
-      borderWidth: 1,
-      borderColor: "#e0e0e0",
-      borderRadius: 20,
+      borderRadius: 8,
       paddingHorizontal: 15,
-      marginRight: 10,
     },
     messageBubble: {
       maxWidth: "80%",
@@ -228,6 +250,12 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
     },
     messageText: {
       fontSize: 16,
+    },
+    inputButton: {
+      padding: 8,
+    },
+    sendButton: {
+      padding: 8,
     },
   });
 
@@ -264,67 +292,118 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
         animationType="slide"
         onRequestClose={() => setIsOpen(false)}
       >
-        <View style={styles.modalContainer}>
-          <View className="flex items-center" style={styles.header}>
-            <View className="flex flex-row justify-start items-center gap-1 flex-grow">
-              <Avatar
-                source={mergedConfig.theme.avatarImage}
-                height={44}
-                width={50}
-                borderRadius={9999}
-              />
-              {mergedConfig.botName && (
-                <Text style={{ color: "white", fontSize: 18 }}>
-                  {mergedConfig.botName}
-                </Text>
-              )}
-              {mergedConfig.botImage && (
+        <SafeAreaView style={styles.modalContainer}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardAvoidingView}
+          >
+            <View className="flex items-center" style={styles.header}>
+              <View className="flex flex-row justify-start items-center gap-1 flex-grow">
                 <Avatar
-                  source={mergedConfig.botImage}
-                  height={30}
-                  width={180}
-                  borderRadius={1}
+                  source={mergedConfig.theme.avatarImage}
+                  height={44}
+                  width={50}
+                  borderRadius={9999}
                 />
-              )}
+                {mergedConfig.botName && (
+                  <Text style={{ color: "white", fontSize: 18 }}>
+                    {mergedConfig.botName}
+                  </Text>
+                )}
+                {mergedConfig.botImage && (
+                  <Avatar
+                    source={mergedConfig.botImage}
+                    height={30}
+                    width={180}
+                    borderRadius={1}
+                  />
+                )}
+              </View>
+              <TouchableOpacity onPress={() => setIsOpen(false)}>
+                <Avatar source={closeIcon} height={20} width={20} />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => setIsOpen(false)}>
-              <Avatar source={closeIcon} height={20} width={20} />
-            </TouchableOpacity>
-          </View>
 
-          {/* <LinearGradient
+            {/* <LinearGradient
             colors={["rgb(255, 255, 255)", "rgb(221, 240, 215)"]} // Set gradient colors
             start={{ x: 0, y: 0 }} // Starting point of gradient (top-left)
             end={{ x: 0, y: 1 }} // Ending point of gradient (bottom-left)
             locations={[0, 0.523]} // Set the percentage for color stops (52.3%)
             style={styles.chatContainer}
           > */}
-          <View
-            style={[
-              styles.chatContainer,
-              { backgroundColor: "rgb(221, 240, 215)" },
-            ]}
-          >
-            {messages.map((msg, index) => (
-              <React.Fragment key={index}>{renderMessage(msg)}</React.Fragment>
-            ))}
-          </View>
-          {/* </LinearGradient> */}
+            <View
+              style={[
+                styles.chatContainer,
+                { backgroundColor: "rgb(221, 240, 215)" },
+              ]}
+            >
+              {messages.map((msg, index) => (
+                <React.Fragment key={index}>
+                  {renderMessage(msg)}
+                </React.Fragment>
+              ))}
+            </View>
+            {/* </LinearGradient> */}
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Type a message..."
-              style={styles.input}
-            />
-            <TouchableOpacity onPress={sendMessage} disabled={isLoading}>
-              <Text style={{ color: mergedConfig.theme.primaryColor }}>
-                Send
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+            {/* <View style={styles.inputContainer}>
+              <TextInput
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Type a message..."
+                style={styles.input}
+              />
+              <TouchableOpacity onPress={sendMessage} disabled={isLoading}>
+                <Text style={{ color: mergedConfig.theme.primaryColor }}>
+                  Send
+                </Text>
+              </TouchableOpacity>
+            </View> */}
+            <View
+              style={[{ backgroundColor: "rgb(221, 240, 215)" }]}
+              className="p-4"
+            >
+              <View
+                style={styles.inputContainer}
+                className="bg-white rounded-[8px]"
+              >
+                <View className="h-[40px] rounded-[12px]">
+                  <TextInput
+                    style={styles.input}
+                    value={message}
+                    onChangeText={setMessage}
+                    placeholder="Ask me anything..."
+                    placeholderTextColor="#999"
+                    onSubmitEditing={sendMessage}
+                    focusable
+                  />
+                </View>
+                <View className="flex flex-row justify-between items-center">
+                  <View className="flex start items-center">
+                    <TouchableOpacity style={styles.inputButton}>
+                      <Avatar
+                        height={24}
+                        width={24}
+                        borderRadius={1}
+                        source={attachIcon}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.sendButton}
+                    onPress={sendMessage}
+                  >
+                    <Avatar
+                      height={24}
+                      width={24}
+                      borderRadius={1}
+                      source={sendIcon}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
     </>
   );
