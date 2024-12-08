@@ -20,7 +20,7 @@ const TabIcon: React.FC<TabIconProps> = () => {
 const Layout = () => {
   return (
     <Tabs
-      initialRouteName="index"
+      initialRouteName="home"
       screenOptions={{
         tabBarActiveTintColor: "white",
       }}
