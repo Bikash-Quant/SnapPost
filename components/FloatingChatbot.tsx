@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import Avatar from "./Avatar";
+import closeIcon from "@/assets/icons/close.png";
 
 // Configuration Type Definition
 interface ChatbotConfig {
@@ -19,9 +21,11 @@ interface ChatbotConfig {
     textColor: string;
     botBubbleColor: string;
     userBubbleColor: string;
+    avatarImage: any;
   };
   apiEndpoint: string;
   botName: string;
+  botImage: any;
 }
 
 // Default Configuration
@@ -40,7 +44,6 @@ const defaultConfig: ChatbotConfig = {
 const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
   config = {},
 }) => {
-  console.log("inside chatbot compoonent");
   // Merge default and provided configurations
   const mergedConfig: ChatbotConfig = {
     ...defaultConfig,
@@ -165,10 +168,10 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
       position: "absolute",
       bottom: 20,
       right: 20,
-      width: 60,
-      height: 60,
+      width: 62,
+      height: 56,
       borderRadius: 30,
-      backgroundColor: mergedConfig.theme.primaryColor,
+      backgroundColor: "gray",
       justifyContent: "center",
       alignItems: "center",
       shadowColor: "#000",
@@ -186,6 +189,7 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
       justifyContent: "space-between",
       padding: 15,
       backgroundColor: mergedConfig.theme.primaryColor,
+      paddingTop: 20,
     },
     closeButton: {
       color: "white",
@@ -237,8 +241,20 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
           },
         ]}
       >
-        <TouchableOpacity onPress={() => setIsOpen(true)} className="bg-red">
-          <Text style={{ color: "red" }}>💬</Text>
+        <TouchableOpacity
+          onPress={() => setIsOpen(true)}
+          style={{
+            height: 54,
+            width: 60,
+            borderRadius: 9999,
+          }}
+        >
+          <Avatar
+            source={mergedConfig.theme.avatarImage}
+            height={54}
+            width={62}
+            borderRadius={9999}
+          />
         </TouchableOpacity>
       </Animated.View>
 
@@ -248,12 +264,30 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
         onRequestClose={() => setIsOpen(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <Text style={{ color: "white", fontSize: 18 }}>
-              {mergedConfig.botName}
-            </Text>
+          <View className="flex items-center" style={styles.header}>
+            <View className="flex flex-row justify-start items-center gap-1 flex-grow">
+              <Avatar
+                source={mergedConfig.theme.avatarImage}
+                height={44}
+                width={50}
+                borderRadius={9999}
+              />
+              {mergedConfig.botName && (
+                <Text style={{ color: "white", fontSize: 18 }}>
+                  {mergedConfig.botName}
+                </Text>
+              )}
+              {mergedConfig.botImage && (
+                <Avatar
+                  source={mergedConfig.botImage}
+                  height={30}
+                  width={180}
+                  borderRadius={1}
+                />
+              )}
+            </View>
             <TouchableOpacity onPress={() => setIsOpen(false)}>
-              <Text style={styles.closeButton}>Close</Text>
+              <Avatar source={closeIcon} height={20} width={20} />
             </TouchableOpacity>
           </View>
 

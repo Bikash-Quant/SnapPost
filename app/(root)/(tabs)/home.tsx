@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Text, View, ScrollView, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FloatingChatbot from "@/components/FloatingChatbot";
+import defaultAvatar from "@/assets/images/default.png";
+import logoText from "@/assets/images/logoText.png";
 
 declare global {
   interface Window {
@@ -80,14 +82,17 @@ export default function HomePage() {
 
   const customConfig = {
     theme: {
-      primaryColor: "#ff6b6b",
+      primaryColor: "#fff",
       backgroundColor: "#ffffff",
       textColor: "#000000",
       botBubbleColor: "#f0f0f0",
-      userBubbleColor: "#ff6b6b",
+      userBubbleColor: "#fff",
+      backgroundColorKey: "#f5f5f5", // Added background color key
+      avatarImage: defaultAvatar,
     },
     apiEndpoint: "https://my-custom-api.com/chat",
-    botName: "My Custom Bot",
+    botName: "",
+    botImage: logoText,
   };
 
   const togglePost = (postId: number) => {
