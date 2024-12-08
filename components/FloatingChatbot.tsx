@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Avatar from "./Avatar";
 import closeIcon from "@/assets/icons/close.png";
+import LinearGradient from "react-native-linear-gradient";
 
 // Configuration Type Definition
 interface ChatbotConfig {
@@ -291,11 +292,24 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.chatContainer}>
+          {/* <LinearGradient
+            colors={["rgb(255, 255, 255)", "rgb(221, 240, 215)"]} // Set gradient colors
+            start={{ x: 0, y: 0 }} // Starting point of gradient (top-left)
+            end={{ x: 0, y: 1 }} // Ending point of gradient (bottom-left)
+            locations={[0, 0.523]} // Set the percentage for color stops (52.3%)
+            style={styles.chatContainer}
+          > */}
+          <View
+            style={[
+              styles.chatContainer,
+              { backgroundColor: "rgb(221, 240, 215)" },
+            ]}
+          >
             {messages.map((msg, index) => (
               <React.Fragment key={index}>{renderMessage(msg)}</React.Fragment>
             ))}
           </View>
+          {/* </LinearGradient> */}
 
           <View style={styles.inputContainer}>
             <TextInput
