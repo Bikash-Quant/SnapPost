@@ -4,9 +4,11 @@ import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { useState } from "react";
 import { Text, View, ScrollView, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingChatbot from "@/components/FloatingChatbot";
+// import FloatingChatbot from "@/components/FloatingChatbot";
 import defaultAvatar from "@/assets/images/default.png";
 import logoText from "@/assets/images/logoText.png";
+
+import FloatingChatbot from "react-native-quant-chat-sdk";
 
 declare global {
   interface Window {
@@ -30,6 +32,7 @@ type BlogPost = {
 
 export default function HomePage() {
   const { user } = useUser();
+  const apiToken = `Bearer ${process.env.EXPO_PUBLIC_TOKEN}`;
   const [expandedPosts, setExpandedPosts] = useState<number[]>([]);
 
   const blogPosts: BlogPost[] = [
@@ -90,7 +93,8 @@ export default function HomePage() {
       backgroundColorKey: "#f5f5f5", // Added background color key
       avatarImage: defaultAvatar,
     },
-    apiEndpoint: "https://my-custom-api.com/chat",
+    apiEndpoint: "https://app.eng.quant.ai/api/chat-messages",
+    apiToken: apiToken,
     botName: "",
     botImage: logoText,
   };

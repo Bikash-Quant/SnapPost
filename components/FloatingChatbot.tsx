@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import closeIcon from "@/assets/icons/close.png";
 import attachIcon from "@/assets/icons/attachment.png";
 import sendIcon from "@/assets/icons/send.png";
 import TypingText from "@/components/TypingText";
+import { useStreamResponse } from "./hooks";
 
 // import LinearGradient from "react-native-linear-gradient";
 
@@ -34,6 +35,7 @@ interface ChatbotConfig {
   apiEndpoint: string;
   botName: string;
   botImage: any;
+  apiToken: string;
 }
 
 // Default Configuration
@@ -52,6 +54,8 @@ const defaultConfig: ChatbotConfig = {
 const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
   config = {},
 }) => {
+  const { fullMessage, fetchStreamingResponse, isStreaming } =
+    useStreamResponse();
   // Merge default and provided configurations
   const mergedConfig: ChatbotConfig = {
     ...defaultConfig,
@@ -72,20 +76,9 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
       sender: "bot",
       typing: false,
     },
-    {
-      text: "what can you do for me",
-      sender: "user",
-      typing: false,
-    },
-    {
-      text: "Thinking ...",
-      sender: "bot",
-      typing: true,
-    },
   ]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
   // Draggable Icon Position
   const pan = useRef(new Animated.ValueXY()).current;
@@ -104,43 +97,11 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
   const sendMessage = async () => {
     if (!inputText.trim()) return;
 
-    // Add user message
-    const userMessage = { text: inputText, sender: "user" as const };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputText("");
-
-    // Start loading and add typing indicator
-    setIsLoading(true);
-    setMessages((prev) => [...prev, { text: "", sender: "bot", typing: true }]);
-
-    try {
-      // Simulate API call (replace with actual fetch)
-      const response = await fetch(mergedConfig.apiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: inputText }),
-      });
-
-      const data = await response.json();
-
-      // Remove typing indicator and add bot response
-      setMessages((prev) =>
-        prev
-          .filter((msg) => !msg.typing)
-          .concat({ text: data.response, sender: "bot" })
-      );
-    } catch (error) {
-      console.error("Chat API Error:", error);
-      setMessages((prev) =>
-        prev
-          .filter((msg) => !msg.typing)
-          .concat({ text: "Sorry, something went wrong.", sender: "bot" })
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    fetchStreamingResponse({
+      inputText,
+      apiToken: mergedConfig.apiToken,
+      apiEndpoint: mergedConfig.apiEndpoint,
+    });
   };
 
   const renderMessage = (message: (typeof messages)[0]) => {
@@ -259,6 +220,23 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
     },
   });
 
+  useEffect(() => {
+    if (isStreaming) {
+      setMessages((prev) =>
+        prev
+          .filter((msg) => !msg.typing)
+          .concat({ text: "Thinking ...", sender: "bot" })
+      );
+    } else {
+      setMessages((prev) =>
+        prev
+          .filter((msg) => !msg.typing)
+          .filter((msg) => msg.text !== "Thinking ...")
+          .concat({ text: fullMessage, sender: "bot" })
+      );
+    }
+  }, [fullMessage, isStreaming]);
+
   return (
     <>
       <Animated.View
@@ -364,13 +342,13 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
             >
               <View
                 style={styles.inputContainer}
-                className="bg-white rounded-[8px]"
+                className="bg-white rounded-[12px]"
               >
                 <View className="h-[40px] rounded-[12px]">
                   <TextInput
                     style={styles.input}
-                    value={message}
-                    onChangeText={setMessage}
+                    value={inputText}
+                    onChangeText={setInputText}
                     placeholder="Ask me anything..."
                     placeholderTextColor="#999"
                     onSubmitEditing={sendMessage}
