@@ -17,6 +17,7 @@ import Avatar from "./Avatar";
 import closeIcon from "@/assets/icons/close.png";
 import attachIcon from "@/assets/icons/attachment.png";
 import sendIcon from "@/assets/icons/send.png";
+import sendActiveIcon from "@/assets/icons/sendActive.png";
 import TypingText from "@/components/TypingText";
 import { useStreamResponse } from "./hooks";
 
@@ -179,7 +180,7 @@ const FloatingChatbot = ({ config = {} }) => {
       </View>
     );
   };
-
+  const isSendButtonActive = !isStreaming && inputText.trim();
   const styles = StyleSheet.create({
     floatingIcon: {
       position: "absolute",
@@ -282,7 +283,9 @@ const FloatingChatbot = ({ config = {} }) => {
       padding: 8,
     },
     sendButton: {
-      padding: 8,
+      padding: 4,
+      backgroundColor: isSendButtonActive ? "#101828" : "#fff",
+      borderRadius: "50%",
     },
   });
 
@@ -440,12 +443,13 @@ const FloatingChatbot = ({ config = {} }) => {
                   <TouchableOpacity
                     style={styles.sendButton}
                     onPress={sendMessage}
+                    disabled={isStreaming}
                   >
                     <Avatar
                       height={24}
                       width={24}
                       borderRadius={1}
-                      source={sendIcon}
+                      source={isSendButtonActive ? sendActiveIcon : sendIcon}
                     />
                   </TouchableOpacity>
                 </View>
