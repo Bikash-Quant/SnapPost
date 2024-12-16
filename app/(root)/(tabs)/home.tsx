@@ -4,11 +4,11 @@ import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import { useState } from "react";
 import { Text, View, ScrollView, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import FloatingChatbot from "@/components/FloatingChatbot";
+// import FloatingChatbot from "@/components/FloatingChatbot";
 import defaultAvatar from "@/assets/images/default.png";
 import logoText from "@/assets/images/logoText.png";
 
-// import FloatingChatbot from "react-native-quant-chat-sdk";
+import FloatingChatbot from "react-native-quant-chat-sdk";
 
 declare global {
   interface Window {
