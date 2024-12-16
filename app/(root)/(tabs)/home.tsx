@@ -121,7 +121,7 @@ export default function HomePage() {
               </Text>
               <Pressable onPress={() => togglePost(post.id)}>
                 <Text style={styles.readMoreButton}>
-                  {expandedPosts.includes(post.id) ? "Read Less" : "Read More"}
+                  {expandedPosts.includes(post.id) ? "Read less" : "Read more"}
                 </Text>
               </Pressable>
             </View>

@@ -8,10 +8,10 @@ import {
   PanResponder,
   Animated,
   StyleSheet,
-  ActivityIndicator,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
 import Avatar from "./Avatar";
 import closeIcon from "@/assets/icons/close.png";
@@ -20,26 +20,10 @@ import sendIcon from "@/assets/icons/send.png";
 import TypingText from "@/components/TypingText";
 import { useStreamResponse } from "./hooks";
 
-// import LinearGradient from "react-native-linear-gradient";
+const token =
+  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzNjI4Y2U5Yi0yODA5LTRhYTEtOTc5Ny02MzMyNWQzZGE1N2EiLCJzdWIiOiJXZWIgQVBJIFBhc3Nwb3J0IiwiYXBwX2lkIjoiMzYyOGNlOWItMjgwOS00YWExLTk3OTctNjMzMjVkM2RhNTdhIiwiYXBwX2NvZGUiOiIxaEtBZU1PVkJJNUY2NkZPIiwiZW5kX3VzZXJfaWQiOiI4YzBiNjdmOS1jYzIzLTRkNTctODllOC1kMjc0ZTRjYjZmZWIifQ.6YYdRRh4ivboXUVxyt_cM96-9WHZ43_duZudPcxC4jA";
 
-// Configuration Type Definition
-interface ChatbotConfig {
-  theme: {
-    primaryColor: string;
-    backgroundColor: string;
-    textColor: string;
-    botBubbleColor: string;
-    userBubbleColor: string;
-    avatarImage: any;
-  };
-  apiEndpoint: string;
-  botName: string;
-  botImage: any;
-  apiToken: string;
-}
-
-// Default Configuration
-const defaultConfig: ChatbotConfig = {
+const defaultConfig = {
   theme: {
     primaryColor: "#007bff",
     backgroundColor: "#f4f4f4",
@@ -47,38 +31,35 @@ const defaultConfig: ChatbotConfig = {
     botBubbleColor: "#e6e6e6",
     userBubbleColor: "#007bff",
   },
-  apiEndpoint: "https://your-api-endpoint.com/chat",
+  apiEndpoint: "https://app.eng.quant.ai/api/chat-messages",
+  apiToken: token,
   botName: "ChatBot",
 };
 
-const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
-  config = {},
-}) => {
-  const { fullMessage, fetchStreamingResponse, isStreaming } =
+const FloatingChatbot = ({ config = {} }) => {
+  const scrollViewRef = useRef(null);
+  const { fullMessage, fetchStreamingResponse, isStreaming, resetMessage } =
     useStreamResponse();
+
   // Merge default and provided configurations
-  const mergedConfig: ChatbotConfig = {
+  const mergedConfig = {
     ...defaultConfig,
     ...config,
     theme: { ...defaultConfig.theme, ...config.theme },
   };
 
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<
-    {
-      text: string;
-      sender: "user" | "bot";
-      typing?: boolean;
-    }[]
-  >([
+  const [messages, setMessages] = useState([
     {
       text: "Hi! Welcome to Telco. I'm Quant. How can I help you today?",
       sender: "bot",
       typing: false,
+      type: "text",
     },
   ]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState("");
 
   // Draggable Icon Position
   const pan = useRef(new Animated.ValueXY()).current;
@@ -95,7 +76,21 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
   ).current;
 
   const sendMessage = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isStreaming) return;
+
+    setMessages((prev) =>
+      [
+        ...prev,
+        {
+          text: inputText,
+          sender: "user",
+          typing: false,
+          type: "text",
+        },
+      ].map((x) => ({ ...x, typing: false }))
+    );
+
+    setInputText("");
 
     fetchStreamingResponse({
       inputText,
@@ -104,8 +99,43 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
     });
   };
 
-  const renderMessage = (message: (typeof messages)[0]) => {
+  const renderMessage = (message) => {
     const isBot = message.sender === "bot";
+
+    if (message.type === "card") {
+      return (
+        <View
+          style={{
+            marginVertical: 10,
+            marginHorizontal: 5,
+            borderRadius: 10,
+            backgroundColor: "white",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+            maxWidth: "80%",
+          }}
+        >
+          <Image
+            source={carImage}
+            style={{ width: "100%", height: 150, borderRadius: 10 }}
+          />
+          <View style={{ padding: 10 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", color: "black" }}>
+              Car booking card
+            </Text>
+            <Text style={{ fontSize: 16, color: "black" }}>Skoda slavia </Text>
+            <Text style={{ fontSize: 14, color: "gray" }}>
+              Lorem Ipsum is simply dummy text of the printing and typesetting
+              industry. Lorem Ipsum has been the industry's standard dummy text
+              ever since the 1500s, when
+            </Text>
+          </View>
+        </View>
+      );
+    }
 
     if (message.typing) {
       return (
@@ -122,6 +152,7 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
         >
           <TypingText
             msg={message.text}
+            onTyping={(msg) => setIsTyping(msg)}
             // color={mergedConfig.theme.primaryColor}
           />
         </View>
@@ -171,11 +202,22 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
       backgroundColor: mergedConfig.theme.backgroundColor,
     },
     header: {
+      display: "flex",
       flexDirection: "row",
       justifyContent: "space-between",
+      alignItems: "center",
       padding: 15,
       backgroundColor: mergedConfig.theme.primaryColor,
       paddingTop: 20,
+      zIndex: 9,
+    },
+    logoContainer: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      alignItems: "center",
+      gap: 1,
+      flex: 1,
     },
     closeButton: {
       color: "white",
@@ -184,18 +226,42 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
     chatContainer: {
       flex: 1,
       padding: 10,
+      paddingBottom: 20,
+      display: "flex",
+      flexDirection: "column",
+      backgroundColor: "rgb(221, 240, 215)",
     },
     keyboardAvoidingView: {
       flex: 1,
+      backgroundColor: mergedConfig.theme.primaryColor,
     },
     inputContainer: {
       flexDirection: "column",
-      padding: 10,
+      padding: 4,
+      backgroundColor: "#fff",
+      borderRadius: 12,
+    },
+    inputWrapper: {
+      height: 40,
+      borderRadius: 12,
     },
     input: {
       flex: 1,
       borderRadius: 8,
       paddingHorizontal: 15,
+      height: "100%",
+      width: "100%",
+    },
+    actionButtonContainer: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    actionButtonLeftContainer: {
+      display: "flex",
+      flex: 1,
+      justifyContent: "start",
     },
     messageBubble: {
       maxWidth: "80%",
@@ -224,18 +290,47 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
     if (isStreaming) {
       setMessages((prev) =>
         prev
-          .filter((msg) => !msg.typing)
-          .concat({ text: "Thinking ...", sender: "bot" })
+          // .filter((msg) => !msg.typing)
+          .concat({
+            text: "Thinking ...",
+            sender: "bot",
+            typing: true,
+            type: "text",
+          })
       );
     } else {
-      setMessages((prev) =>
-        prev
-          .filter((msg) => !msg.typing)
-          .filter((msg) => msg.text !== "Thinking ...")
-          .concat({ text: fullMessage, sender: "bot" })
-      );
+      if (fullMessage) {
+        setMessages((prev) =>
+          prev
+            // .filter((msg) => !msg.typing)
+            .filter((msg) => msg.text !== "Thinking ...")
+            .concat({
+              text: fullMessage,
+              sender: "bot",
+              typing: true,
+              type: "text",
+            })
+        );
+        resetMessage();
+      }
     }
   }, [fullMessage, isStreaming]);
+
+  const scrollToBottom = () => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  };
+
+  useEffect(() => {
+    if (isTyping) {
+      scrollToBottom(); // Scroll to the bottom when streaming
+    }
+  }, [isTyping]);
+
+  if (messages.length) {
+    scrollToBottom();
+  }
 
   return (
     <>
@@ -250,6 +345,7 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
       >
         <TouchableOpacity
           onPress={() => setIsOpen(true)}
+          onPressIn={() => setIsOpen(true)}
           style={{
             height: 54,
             width: 60,
@@ -270,13 +366,13 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
         animationType="slide"
         onRequestClose={() => setIsOpen(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalContainer}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.keyboardAvoidingView}
           >
-            <View className="flex items-center" style={styles.header}>
-              <View className="flex flex-row justify-start items-center gap-1 flex-grow">
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
                 <Avatar
                   source={mergedConfig.theme.avatarImage}
                   height={44}
@@ -302,49 +398,23 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
               </TouchableOpacity>
             </View>
 
-            {/* <LinearGradient
-            colors={["rgb(255, 255, 255)", "rgb(221, 240, 215)"]} // Set gradient colors
-            start={{ x: 0, y: 0 }} // Starting point of gradient (top-left)
-            end={{ x: 0, y: 1 }} // Ending point of gradient (bottom-left)
-            locations={[0, 0.523]} // Set the percentage for color stops (52.3%)
-            style={styles.chatContainer}
-          > */}
-            <View
-              style={[
-                styles.chatContainer,
-                { backgroundColor: "rgb(221, 240, 215)" },
-              ]}
+            <ScrollView
+              ref={scrollViewRef}
+              style={styles.chatContainer}
+              contentContainerStyle={{ flexGrow: 1 }}
             >
               {messages.map((msg, index) => (
                 <React.Fragment key={index}>
                   {renderMessage(msg)}
                 </React.Fragment>
               ))}
-            </View>
-            {/* </LinearGradient> */}
+            </ScrollView>
 
-            {/* <View style={styles.inputContainer}>
-              <TextInput
-                value={inputText}
-                onChangeText={setInputText}
-                placeholder="Type a message..."
-                style={styles.input}
-              />
-              <TouchableOpacity onPress={sendMessage} disabled={isLoading}>
-                <Text style={{ color: mergedConfig.theme.primaryColor }}>
-                  Send
-                </Text>
-              </TouchableOpacity>
-            </View> */}
             <View
-              style={[{ backgroundColor: "rgb(221, 240, 215)" }]}
-              className="p-4"
+              style={[{ backgroundColor: "rgb(221, 240, 215)", padding: 8 }]}
             >
-              <View
-                style={styles.inputContainer}
-                className="bg-white rounded-[12px]"
-              >
-                <View className="h-[40px] rounded-[12px]">
+              <View style={styles.inputContainer}>
+                <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
                     value={inputText}
@@ -355,8 +425,9 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
                     focusable
                   />
                 </View>
-                <View className="flex flex-row justify-between items-center">
-                  <View className="flex start items-center">
+
+                <View style={styles.actionButtonContainer}>
+                  <View style={styles.actionButtonLeftContainer}>
                     <TouchableOpacity style={styles.inputButton}>
                       <Avatar
                         height={24}
@@ -381,7 +452,7 @@ const FloatingChatbot: React.FC<{ config?: Partial<ChatbotConfig> }> = ({
               </View>
             </View>
           </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
       </Modal>
     </>
   );

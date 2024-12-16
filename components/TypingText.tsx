@@ -3,8 +3,13 @@ import { Text, StyleSheet } from "react-native";
 interface TypingTextProps {
   msg: string;
   keyTyping?: boolean;
+  onTyping?: (msg: string) => void;
 }
-const TypingText: React.FC<TypingTextProps> = ({ msg, keyTyping = true }) => {
+const TypingText: React.FC<TypingTextProps> = ({
+  msg,
+  keyTyping = true,
+  onTyping = () => {},
+}) => {
   const [displayedText, setDisplayedText] = useState("");
   const [typingIndex, setTypingIndex] = useState(0);
 
@@ -25,7 +30,7 @@ const TypingText: React.FC<TypingTextProps> = ({ msg, keyTyping = true }) => {
             return prevIndex; // Return the current index to avoid further updates
           }
         });
-      }, 100); // Adjust the speed by changing the interval time (in ms)
+      }, 50); // Adjust the speed by changing the interval time (in ms)
 
       // Cleanup the interval on component unmount or when typing stops
       return () => clearInterval(typingInterval);
@@ -34,6 +39,11 @@ const TypingText: React.FC<TypingTextProps> = ({ msg, keyTyping = true }) => {
       setDisplayedText(msg);
     }
   }, [keyTyping, msg]);
+
+  useEffect(() => {
+    const txt = msg === displayedText ? "" : displayedText;
+    onTyping(txt);
+  }, [displayedText]);
 
   return (
     <Text style={[styles.messageText, styles.botText]} className="w-auto">
