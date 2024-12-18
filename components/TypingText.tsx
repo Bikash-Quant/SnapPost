@@ -65,4 +65,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TypingText;
+export default React.memo(TypingText);
